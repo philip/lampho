@@ -30,10 +30,11 @@ None yet.
 
 ##### Same, but with all available options
 
+    $ lampho new foo --dev --auth --link --dev
+
+##### Options
+
 - `--dev` : installs Laravel from the dev branch
 - `--auth`: executes `artisan make:auth`
 - `--link`: executes `valet link` in the new project's directory
-
-
-    $ lampho new foo --dev --auth --link --dev
 
