@@ -20,6 +20,11 @@ class NewCommand extends Command
                         {--dev  : Choose the dev branch instead of master}
                         {--link : Create a Valet link to the project directory}';
 
+    protected $branch = 'master';
+    protected $projectname = '';
+    protected $projectpath = '';
+    protected $cwd = '';
+
     /**
      * The console command description.
      *
@@ -35,6 +40,8 @@ class NewCommand extends Command
     public function __construct()
     {
         parent::__construct();
+
+        $this->cwd = getcwd();
     }
 
     /**
@@ -44,39 +51,31 @@ class NewCommand extends Command
      */
     public function handle(): void
     {
+        $this->projectname = $this->argument('name');
+        $this->projectpath = $this->cwd . DIRECTORY_SEPARATOR . $this->projectname;
 
-        // Project Name
-        $name = $this->argument('name');
-
-        // Dev branch or master
-        $branch = "";
-        if ($this->option('dev')) {
-            $this->info("Installation will use the dev branch instead of master" . PHP_EOL );
-            $branch = "--dev";
-        }
-
-        $this->info("Creating a new project named $name" . PHP_EOL );
-        $this->info("Executing: laravel new $name $branch");
-
-        $process = new Process("laravel new $name $branch");
-
-        // @todo Check this without Process; learn how to do in native Laravel
-        if (is_dir($process->getWorkingDirectory() . DIRECTORY_SEPARATOR . $name)) {
-            if ($this->confirm("The directory $name already exists, would you like me to completely remove it and proceed?")) {
-                $this->info("Removing directory $name/");
-                // @todo Dangerous? Add some checks here, perhaps a confirmation e.g., delete $filepath?
-                $rm = new Process("rm -rf ". $process->getWorkingDirectory() . DIRECTORY_SEPARATOR . $name);
-                $rm->run();
-                if (!$rm->isSuccessful()) {
-                    throw new ProcessFailedException($process);
-                }
-                echo $rm->getOutput();
-            } else {
-                $this->info("Directory $name already exists, exiting...");
+        if ($this->projectExists()) {
+            if (!$this->askToAndRemoveProject()) {
+                $this->info("Sorry, the project at {$this->projectpath} already exists and you have chosen to not remove it. Exiting.");
                 exit;
             }
         }
 
+        $this->setDesiredBranch();
+
+        $_branch = "";
+        if ($this->branch === 'dev') {
+            $this->info("The laravel installation will use the latest developmental branch by passing in --dev");
+            $_branch = " --dev";
+        }
+
+        $command = "laravel new {$this->projectname}$_branch";
+
+        $this->info("Creating a new project named {$this->projectname}");
+        $this->info("Executing command '$command' in directory {$this->cwd}");
+
+        $process = new Process($command);
+        $process->setWorkingDirectory($this->cwd);
         $process->run();
 
         if (!$process->isSuccessful()) {
@@ -86,11 +85,72 @@ class NewCommand extends Command
         // @todo Determine why the above outputs before this point; so the following getOutput() call does nothing
         echo $process->getOutput();
 
-        if ($this->option('auth')) {
-            $this->info("Executing make:auth" . PHP_EOL );
+        $this->doAuth();
 
-            $process = new Process("php artisan make:auth");
-            $process->setWorkingDirectory($process->getWorkingDirectory() . '/' . $name);
+        $this->doValetLink();
+    }
+
+    /**
+     * Set branch to dev if --dev is passed in, else keep default
+     */
+    protected function setDesiredBranch() {
+        if ($this->option('dev')) {
+            $this->branch = 'dev';
+        }
+    }
+
+    /**
+     * Check if project's directory already exists
+     * @return bool true if exists, else false
+     */
+    protected function projectExists() {
+
+        if (is_dir($this->projectpath)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if directory already exists
+     * If exists: prompt to remove, return true if user says yes, else return false
+     * If not exists: return true
+     * @todo Use --force here instead of rm?
+     * @return bool true if able to continue, else false if directory exists and won't be deleted
+     */
+    protected function askToAndRemoveProject() {
+
+        $this->info("The directory '{$this->projectpath}' already exists.");
+
+        $command = "rm -rf {$this->projectpath}";
+
+        if ($this->confirm("Shall I proceed by executing the following command? $command")) {
+            $this->info("Removing directory {$this->projectpath}");
+            // @todo Dangerous? Add some checks here, perhaps a confirmation e.g., delete $filepath?
+            // @todo Check if it was removed or if there were errors e.g., permission errors
+            $rm = new Process($command);
+            $rm->run();
+            if (!$rm->isSuccessful()) {
+                throw new ProcessFailedException($process);
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Execute make:auth if user passed in --auth
+     * @return string Output from make:auth command
+     */
+    protected function doAuth() {
+
+        $command = "php artisan make:auth";
+        if ($this->option('auth')) {
+            $this->info("Executing $command");
+
+            $process = new Process($command);
+            $process->setWorkingDirectory($this->projectpath);
 
             $process->run();
 
@@ -98,14 +158,23 @@ class NewCommand extends Command
                 throw new ProcessFailedException($process);
             }
 
-            echo $process->getOutput();
+            return $process->getOutput();
         }
+        return false;
+    }
+
+    /**
+     * Execute valet link $projectname if user passed in --link
+     * @return string Output from the valet link command else false if not executed
+     */
+    protected function doValetLink() {
 
         if ($this->option('link')) {
-            $this->info("Linking Valet here" . PHP_EOL );
+            $command = "valet link {$this->projectname}";
+            $this->info("Linking valet by executing '$command' in {$this->cwd}");
 
-            $process = new Process("valet link $name");
-            $process->setWorkingDirectory($process->getWorkingDirectory() . '/' . $name);
+            $process = new Process($command);
+            $process->setWorkingDirectory($this->projectpath);
 
             $process->run();
 
@@ -115,7 +184,7 @@ class NewCommand extends Command
 
             echo $process->getOutput();
         }
-
+        return false;
     }
 
     /**
