@@ -20,9 +20,10 @@ class NewCommand extends Command
                         {--dev  : Choose the dev branch instead of master}
                         {--link : Create a Valet link to the project directory}';
 
-    protected $branch = 'master';
     protected $projectname = '';
+
     protected $projectpath = '';
+
     protected $cwd = '';
 
     /**
@@ -34,8 +35,6 @@ class NewCommand extends Command
 
     /**
      * Create a new command instance.
-     *
-     * @return void
      */
     public function __construct()
     {
@@ -52,24 +51,25 @@ class NewCommand extends Command
     public function handle(): void
     {
         $this->projectname = $this->argument('name');
-        $this->projectpath = $this->cwd . DIRECTORY_SEPARATOR . $this->projectname;
+        $this->projectpath = $this->cwd.DIRECTORY_SEPARATOR.$this->projectname;
 
-        if ($this->projectExists()) {
-            if (!$this->askToAndRemoveProject()) {
-                $this->info("Sorry, the project at {$this->projectpath} already exists and you have chosen to not remove it. Exiting.");
+        if (is_dir($this->projectpath)) {
+            if (! $this->askToAndRemoveProject()) {
+                $this->error(
+                    "Sorry, the project at {$this->projectpath} already exists and you have chosen to not remove it. Exiting."
+                );
                 exit;
             }
         }
 
-        $this->setDesiredBranch();
-
-        $_branch = "";
-        if ($this->branch === 'dev') {
-            $this->info("The laravel installation will use the latest developmental branch by passing in --dev");
-            $_branch = " --dev";
+        if ($this->option('dev')) {
+            $this->warn("The laravel installation will use the latest developmental branch by passing in --dev");
+            $branch = " --dev";
+        } else {
+            $branch = 'master';
         }
 
-        $command = "laravel new {$this->projectname}$_branch";
+        $command = "laravel new {$this->projectname}$branch";
 
         $this->info("Creating a new project named {$this->projectname}");
         $this->info("Executing command '$command' in directory {$this->cwd}");
@@ -78,12 +78,12 @@ class NewCommand extends Command
         $process->setWorkingDirectory($this->cwd);
         $process->run();
 
-        if (!$process->isSuccessful()) {
+        if (! $process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
 
         // @todo Determine why the above outputs before this point; so the following getOutput() call does nothing
-        echo $process->getOutput();
+        $this->info($process->getOutput());
 
         $this->doAuth();
 
@@ -91,36 +91,16 @@ class NewCommand extends Command
     }
 
     /**
-     * Set branch to dev if --dev is passed in, else keep default
-     */
-    protected function setDesiredBranch() {
-        if ($this->option('dev')) {
-            $this->branch = 'dev';
-        }
-    }
-
-    /**
-     * Check if project's directory already exists
-     * @return bool true if exists, else false
-     */
-    protected function projectExists() {
-
-        if (is_dir($this->projectpath)) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * Check if directory already exists
      * If exists: prompt to remove, return true if user says yes, else return false
      * If not exists: return true
+     *
      * @todo Use --force here instead of rm?
      * @return bool true if able to continue, else false if directory exists and won't be deleted
      */
-    protected function askToAndRemoveProject() {
-
-        $this->info("The directory '{$this->projectpath}' already exists.");
+    protected function askToAndRemoveProject(): boolean
+    {
+        $this->warn("The directory '{$this->projectpath}' already exists.");
 
         $command = "rm -rf {$this->projectpath}";
 
@@ -130,9 +110,10 @@ class NewCommand extends Command
             // @todo Check if it was removed or if there were errors e.g., permission errors
             $rm = new Process($command);
             $rm->run();
-            if (!$rm->isSuccessful()) {
+            if (! $rm->isSuccessful()) {
                 throw new ProcessFailedException($process);
             }
+
             return true;
         } else {
             return false;
@@ -141,12 +122,14 @@ class NewCommand extends Command
 
     /**
      * Execute make:auth if user passed in --auth
-     * @return string Output from make:auth command
+     *
+     * @return $this
      */
-    protected function doAuth() {
-
-        $command = "php artisan make:auth";
+    protected function doAuth()
+    {
         if ($this->option('auth')) {
+            $command = "php artisan make:auth";
+
             $this->info("Executing $command");
 
             $process = new Process($command);
@@ -154,21 +137,21 @@ class NewCommand extends Command
 
             $process->run();
 
-            if (!$process->isSuccessful()) {
+            if (! $process->isSuccessful()) {
                 throw new ProcessFailedException($process);
             }
 
-            return $process->getOutput();
+            $this->info($process->getOutput());
         }
-        return false;
     }
 
     /**
      * Execute valet link $projectname if user passed in --link
-     * @return string Output from the valet link command else false if not executed
+     *
+     * @throws \Symfony\Component\Process\Exception\ProcessFailedException
      */
-    protected function doValetLink() {
-
+    protected function doValetLink(): void
+    {
         if ($this->option('link')) {
             $command = "valet link {$this->projectname}";
             $this->info("Linking valet by executing '$command' in {$this->cwd}");
@@ -178,24 +161,11 @@ class NewCommand extends Command
 
             $process->run();
 
-            if (!$process->isSuccessful()) {
+            if (! $process->isSuccessful()) {
                 throw new ProcessFailedException($process);
             }
 
-            echo $process->getOutput();
+            $this->info($process->getOutput());
         }
-        return false;
     }
-
-    /**
-	 * Define the command's schedule.
-	 *
-	 * @param  \Illuminate\Console\Scheduling\Schedule $schedule
-	 *
-	 * @return void
-	 */
-	public function schedule(Schedule $schedule): void
-	{
-		// $schedule->command(static::class)->everyMinute();
-	}
 }
