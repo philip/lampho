@@ -30,7 +30,7 @@ None yet.
 
 ##### Same, but with all available options
 
-    $ lampho new foo --dev --auth --link --dev
+    $ lampho new foo --dev --auth --link
 
 ##### Options
 
