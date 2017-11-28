@@ -2,25 +2,29 @@
 
 Honestly, this is a test project written to help me learn Laravel. 
 All advice is welcome. Ideally it'll be refactored several times. 
-The initial version no doubt breaks every known best practice. 
+The initial version no doubt breaks every known best practice! :)
 
 ## Things that inspired this project
 
-- Laravel: Something I'm starting to learn
-- Lambo: A useful shell script that generates Laravel projects
-- Laravel Zero: Base of this project, and I like CLI
-- Me: reprogramming my brain from PHP 4 to PHP 7
+- [Lambo](https://github.com/tightenco/lambo): A useful shell script that generates Laravel projects
+- [Laravel](https://laravel.com/): Something I'm starting to learn
+- [Laravel Zero](http://laravel-zero.com/): Base of this project, and I like CLI
+- Me: reprogramming my brain from PHP 4 to PHP 7 (I'm an old-timer that still uses `array()`)
 
 ## Status
 
-- It works. However, *all* logic was thrown into a single `handle()` method so that's not good
-- Also most files are from a new `Laravel Zero` installation
-- Yes the name `lampho` is terrible but it's temporary and my brain thinks replacing `b` (bash) with `ph` (PHP) makes some sense
-- It doesn't do much today
+- It works and contains most lambo commands. However, *all* logic is thrown into `app\Commands\NewCommand.php` so that's not ideal
+- The name `lampho` is strange but it's probably temporary and my brain thinks replacing `b` (bash) with `ph` (PHP) makes sense; that and maybe lamb pho exists?
+- It'll do more tomorrow than it does today
 
 ## Documentation
 
-None yet.
+```
+ ___  ___   ___  _ __  
+/ __|/ _ \ / _ \| '_ \ 
+\__ \ (_) | (_) | | | |
+|___/\___/ \___/|_| |_|
+```
 
 ## Examples
 
@@ -28,13 +32,24 @@ None yet.
 
     $ lampho new foo
 
-##### Same, but with all available options
+##### Same, but with a few options
 
-    $ lampho new foo --dev --auth --link
+    $ lampho new foo --auth --link --node
+    
+##### Configuration options
 
-##### Options
+Soon we'll be able to define configuration options and common settings as typing all of the above can become tedious -- all suggestions welcome.
 
-- `--dev` : installs Laravel from the dev branch
-- `--auth`: executes `artisan make:auth`
-- `--link`: executes `valet link` in the new project's directory
 
+##### Options according to `lampho help new`
+```
+      --auth               Run make:auth
+      --dev                Choose the dev branch instead of master
+      --editor[=EDITOR]    Text editor to open the project in
+      --link               Create a Valet link to the project directory
+      --message[=MESSAGE]  Set the first commit message
+      --node               Set to execute yarn or npm install
+      --path[=PATH]        Base path for the installation, otherwise CWD is used
+```
+
+Several are missing or not yet implemented.
