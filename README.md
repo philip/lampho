@@ -17,6 +17,16 @@ The initial version no doubt breaks every known best practice! :)
 - The name `lampho` is strange but it's probably temporary and my brain thinks replacing `b` (bash) with `ph` (PHP) makes sense; that and maybe lamb pho exists?
 - It'll do more tomorrow than it does today
 
+## Installation
+
+    $ git clone git@github.com:philip/lampho.git
+    
+    $ cd lampho
+
+    $ composer update
+
+    $ ./lampho
+
 ## Documentation
 
 ```
