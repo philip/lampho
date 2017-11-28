@@ -18,14 +18,17 @@ The initial version no doubt breaks every known best practice! :)
 - It'll do more tomorrow than it does today
 
 ## Installation
+#### Source
 
     $ git clone git@github.com:philip/lampho.git
-    
     $ cd lampho
-
     $ composer update
-
     $ ./lampho
+
+#### Global package (for the brave)
+
+    $ composer global require philip/lampho=dev-master
+    $ lampho
 
 ## Documentation
 
