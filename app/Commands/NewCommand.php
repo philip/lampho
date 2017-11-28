@@ -66,7 +66,7 @@ class NewCommand extends Command
             $this->warn("The laravel installation will use the latest developmental branch by passing in --dev");
             $branch = " --dev";
         } else {
-            $branch = 'master';
+            $branch = '';
         }
 
         $command = "laravel new {$this->projectname}$branch";
