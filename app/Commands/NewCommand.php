@@ -98,7 +98,7 @@ class NewCommand extends Command
      * @todo Use --force here instead of rm?
      * @return bool true if able to continue, else false if directory exists and won't be deleted
      */
-    protected function askToAndRemoveProject(): boolean
+    protected function askToAndRemoveProject()
     {
         $this->warn("The directory '{$this->projectpath}' already exists.");
 
