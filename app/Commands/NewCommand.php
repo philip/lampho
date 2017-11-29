@@ -6,6 +6,7 @@ use LaravelZero\Framework\Commands\Command;
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
+use Illuminate\Filesystem;
 
 class NewCommand extends Command
 {
@@ -73,9 +74,7 @@ class NewCommand extends Command
 
         if (is_dir($this->projectpath)) {
             if (! $this->askToAndRemoveProject()) {
-                $this->error(
-                    "Sorry, the project at {$this->projectpath} already exists and you have chosen to not remove it. Exiting."
-                );
+                $this->error("Goodbye!");
                 exit;
             }
         }
@@ -125,22 +124,22 @@ class NewCommand extends Command
      */
     protected function askToAndRemoveProject()
     {
-        $this->warn("The directory '{$this->projectpath}' already exists.");
+        $this->info("The directory '{$this->projectpath}' already exists.");
 
-        $command = "rm -rf {$this->projectpath}";
+        if ($this->confirm("Shall I proceed by removing the following directory? {$this->projectpath}")) {
 
-        if ($this->confirm("Shall I proceed by executing the following command? $command")) {
-            $this->info("Removing directory {$this->projectpath}");
-            // @todo Dangerous? Add some checks here, perhaps a confirmation e.g., delete $filepath?
-            // @todo Check if it was removed or if there were errors e.g., permission errors
-            $rm = new Process($command);
-            $rm->run();
-            if (! $rm->isSuccessful()) {
-                throw new ProcessFailedException($process);
+            $fs = new Filesystem\Filesystem();
+
+            if ($fs->deleteDirectory($this->projectpath)) {
+                $this->info("I removed the following directory: {$this->projectpath}");
+                return true;
+            } else {
+                $this->error("I was unable to remove the '{$this->projectpath}' directory so I must exit.");
+                return false;
             }
 
-            return true;
         } else {
+            $this->error("You have chosen to not remove the '{$this->projectpath}' directory so I must exit.");
             return false;
         }
     }
