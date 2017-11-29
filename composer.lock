@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "526ea7e46619406f437a1c7cce02044b",
+    "content-hash": "f4e5a63fae932502dad2489cb4abdf93",
     "packages": [
         {
             "name": "doctrine/inflector",
@@ -572,16 +572,16 @@
         },
         {
             "name": "laravel-zero/framework",
-            "version": "v4.0.8",
+            "version": "v4.0.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel-zero/framework.git",
-                "reference": "653984ba2cc1500c01a8c635efb3c89e29dc9369"
+                "reference": "a444fd348caf880c2fffc1f55cb051a35c53d147"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel-zero/framework/zipball/653984ba2cc1500c01a8c635efb3c89e29dc9369",
-                "reference": "653984ba2cc1500c01a8c635efb3c89e29dc9369",
+                "url": "https://api.github.com/repos/laravel-zero/framework/zipball/a444fd348caf880c2fffc1f55cb051a35c53d147",
+                "reference": "a444fd348caf880c2fffc1f55cb051a35c53d147",
                 "shasum": ""
             },
             "require": {
@@ -630,7 +630,7 @@
                 "laravel",
                 "zero"
             ],
-            "time": "2017-11-22T21:15:42+00:00"
+            "time": "2017-11-28T19:19:31+00:00"
         },
         {
             "name": "league/flysystem",
