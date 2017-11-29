@@ -1,6 +1,6 @@
 {
     "name": "philip/lampho",
-    "description": "Lampho is a test project with a horrible name that's like lambo written in PHP",
+    "description": "Lampho is like lambo but written in PHP; the two might merge one day",
     "keywords": ["laravel", "console"],
     "homepage": "https://github.com/philip/lampho",
     "license": "MIT",
