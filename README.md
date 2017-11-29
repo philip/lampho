@@ -25,11 +25,6 @@ The initial version no doubt breaks every known best practice! :)
     $ composer update
     $ ./lampho
 
-#### Global package (for the brave)
-
-    $ composer global require philip/lampho=dev-master
-    $ lampho
-
 ## Documentation
 
 ```
