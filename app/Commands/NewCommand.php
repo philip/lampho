@@ -285,12 +285,29 @@ class NewCommand extends Command
         if ($this->option('message')) {
             $this->commitmessage = $this->option('message');
         }
+
+        $finder = new ExecutableFinder();
+        if (! $finder->find('git')) {
+            $this->info("Unable to find 'git' on the system so I cannot initialize a git repo in '{$this->projectpath}'");
+            return false;
+        }
+
+        $process = new Process("dummy command");
+        $process->setWorkingDirectory($this->projectpath);
+
         $commands = array(
             'git init',
             'git add .',
-            'git commit -m "'. $this->commitmessage . '"',
+            'git commit -m "'. str_replace('"', '\"', $this->commitmessage) . '"',
         );
-        return $commands;
+
+        foreach ($commands as $command) {
+            $process->setCommandLine($command);
+            $process->run();
+            $this->info($process->getOutput());
+        }
+
+        return true;
     }
 
     /**
