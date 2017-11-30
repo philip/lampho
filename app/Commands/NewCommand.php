@@ -18,6 +18,7 @@ class NewCommand extends Command
     protected $signature = 'new
                         {name : Name of the Laravel project}
                         {--auth : Run make:auth}
+                        {--browser : Browser you want to open the project in}
                         {--dev  : Choose the dev branch instead of master}
                         {--editor= : Text editor to open the project in}
                         {--link : Create a Valet link to the project directory}
@@ -28,6 +29,8 @@ class NewCommand extends Command
     protected $projectname = '';
 
     protected $projectpath = '';
+
+    protected $projecturl = '';
 
     protected $cwd = '';
 
@@ -69,6 +72,7 @@ class NewCommand extends Command
     public function handle(): void
     {
         $this->projectname = $this->argument('name');
+        $this->projecturl = 'http://'.$this->projectname.'.dev';
 
         $this->getAvailableTools();
         if (! $this->tools['laravel']) {
@@ -120,6 +124,7 @@ class NewCommand extends Command
 
         $this->openEditor();
 
+        $this->openBrowser();
     }
 
     /**
@@ -243,10 +248,42 @@ class NewCommand extends Command
     /**
      * Set browser to open valet project in
      */
-    protected function setBrowser()
+    protected function openBrowser()
     {
-        if ($this->option('browser')) {
+        $this->info("Attempting to find a browser to open this in.");
 
+        $browser = '';
+        if ($this->option('browser')) {
+            $browser = $this->option('browser');
+        }
+
+        // macOS (darwin)
+        if (false !== stripos(PHP_OS, 'darwin')) {
+            if ($browser === '') {
+                $command = 'open "'.$this->projecturl.'"';
+            } else {
+                $command = 'open -a "'. $browser .'" "'. $this->projecturl . '"';
+            }
+        }
+
+        // Windows @todo do we support Windows?
+        if (windows_os()) {
+            $command = '';
+        }
+
+        // Probably Linux @todo test me
+        if (empty($command)) {
+            $finder = new ExecutableFinder();
+            if ($finder->find('xdg-open')) {
+                $command = 'xdg-open "' . $this->projecturl . '"';
+            }
+        }
+
+        if (isset($command)) {
+            $this->info("Opening in your browser now by executing '$command'");
+            $process = new Process($command);
+            $process->setWorkingDirectory($this->cwd);
+            $process->run();
         }
     }
 
