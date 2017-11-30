@@ -41,6 +41,8 @@ class NewCommand extends Command
 
     protected $editor = '';
 
+    protected $tools = array();
+
     /**
      * The console command description.
      *
@@ -67,6 +69,12 @@ class NewCommand extends Command
     public function handle(): void
     {
         $this->projectname = $this->argument('name');
+
+        $this->getAvailableTools();
+        if (! $this->tools['laravel']) {
+            $this->error("Unable to find laravel installer so I must exit. One day I might use composer here instead of exiting.");
+            exit;
+        }
 
         $this->setBasePath();
 
@@ -252,12 +260,10 @@ class NewCommand extends Command
         if ($this->option('node')) {
 
             $command = '';
-            if ($finder->find('yarn')) {
+            if ($this->tools['yarn']) {
                 $command = 'yarn';
-            } else {
-                if ($finder->find('npm')) {
-                    $command = 'npm install';
-                }
+            } elseif ($this->tools['npm']) {
+                $command = 'npm install';
             }
 
             if (empty($command)) {
@@ -286,8 +292,7 @@ class NewCommand extends Command
             $this->commitmessage = $this->option('message');
         }
 
-        $finder = new ExecutableFinder();
-        if (! $finder->find('git')) {
+        if (! $this->tools['git']) {
             $this->info("Unable to find 'git' on the system so I cannot initialize a git repo in '{$this->projectpath}'");
             return false;
         }
@@ -315,9 +320,15 @@ class NewCommand extends Command
      *
      * @throws \Symfony\Component\Process\Exception\ProcessFailedException
      */
-    protected function doValetLink(): void
+    protected function doValetLink()
     {
         if ($this->option('link')) {
+
+            if (! $this->tools['valet']) {
+                $this->warn("Cannot find valet on your system so a valet link was not created.");
+                return false;
+            }
+
             $command = "valet link {$this->projectname}";
             $this->info("Linking valet by executing '$command' in {$this->basepath}");
 
@@ -331,6 +342,16 @@ class NewCommand extends Command
             }
 
             $this->info($process->getOutput());
+        }
+    }
+
+    protected function getAvailableTools() {
+
+        $finder = new ExecutableFinder();
+
+        $checks = array('yarn', 'npm', 'git', 'valet', 'laravel', 'composer');
+        foreach ($checks as $check) {
+            $this->tools[$check] = $finder->find($check);
         }
     }
 }
