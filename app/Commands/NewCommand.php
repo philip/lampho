@@ -47,6 +47,8 @@ class NewCommand extends Command
 
     protected $tools = array();
 
+    protected $dbtypes = ['sqlite', 'mysql'];
+
     /**
      * The console command description.
      *
@@ -121,13 +123,19 @@ class NewCommand extends Command
 
         $this->doAuth();
 
-        // @todo Only 'sqlite' works today
         if ($this->option('createdb')) {
-            if (!in_array($this->option('createdb'), ['sqlite', 'mysql'])) {
-                $this->warn("You passed in --createdb but I only understand 'sqlite' and 'mysql' but you passed in '". $this->option('createdb') . "' so I am skipping this step.");
+            if (!in_array($this->option('createdb'), $this->dbtypes)) {
+                $this->info("You passed in '--createdb " . $this->option('createdb') . "' but I do not understand");
+                $type = $this->anticipate("What type of database would you like to install? Options are ". implode(' or ', $this->dbtypes) . '.', $this->dbtypes, $this->dbtypes[0]);
             } else {
-                $this->info("I am creating a new ". $this->option('createdb') . " database");
-                if ($this->createDatabase($this->option('createdb'))) {
+                $type = $this->option('createdb');
+            }
+
+            if (!in_array($type, $this->dbtypes)) {
+                $this->alert("Now you're being silly. Entering $type, really? Okay, I won't create a database for you.");
+            } else {
+                $this->info("I am creating a new $type database");
+                if ($this->createDatabase($type)) {
                     $this->info("I am executing 'php artisan migrate:fresh'");
                     $this->migrateFresh();
                 }
