@@ -51,13 +51,14 @@ Soon we'll be able to define configuration options and common settings as typing
 
 ##### Options according to `lampho help new`
 ```
-      --auth               Run make:auth
-      --dev                Choose the dev branch instead of master
-      --editor[=EDITOR]    Text editor to open the project in
-      --link               Create a Valet link to the project directory
-      --message[=MESSAGE]  Set the first commit message
-      --node               Set to execute yarn or npm install
-      --path[=PATH]        Base path for the installation, otherwise CWD is used
+      --auth                 Run make:auth
+      --browser              Browser you want to open the project in
+      --createdb[=CREATEDB]  Create a database; pass in sqlite or mysql
+      --dev                  Choose the dev branch instead of master
+      --editor[=EDITOR]      Text editor to open the project in
+      --link                 Create a Valet link to the project directory
+      --message[=MESSAGE]    Set the first commit message
+      --node                 Set to execute yarn or npm install
+      --path[=PATH]          Base path for the installation, otherwise CWD is used
 ```
 
-Several are missing or not yet implemented.

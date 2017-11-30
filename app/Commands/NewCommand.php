@@ -19,6 +19,7 @@ class NewCommand extends Command
                         {name : Name of the Laravel project}
                         {--auth : Run make:auth}
                         {--browser : Browser you want to open the project in}
+                        {--createdb= : Create a database; pass in sqlite or mysql}
                         {--dev  : Choose the dev branch instead of master}
                         {--editor= : Text editor to open the project in}
                         {--link : Create a Valet link to the project directory}
@@ -118,9 +119,22 @@ class NewCommand extends Command
             $this->info("I replaced .env variables in your new Laravel application");
         }
 
-        $this->doNodeOrYarn();
-
         $this->doAuth();
+
+        // @todo Only 'sqlite' works today
+        if ($this->option('createdb')) {
+            if (!in_array($this->option('createdb'), ['sqlite', 'mysql'])) {
+                $this->warn("You passed in --createdb but I only understand 'sqlite' and 'mysql' but you passed in '". $this->option('createdb') . "' so I am skipping this step.");
+            } else {
+                $this->info("I am creating a new ". $this->option('createdb') . " database");
+                if ($this->createDatabase($this->option('createdb'))) {
+                    $this->info("I am executing 'php artisan migrate:fresh'");
+                    $this->migrateFresh();
+                }
+            }
+        }
+
+        $this->doNodeOrYarn();
 
         $this->doValetLink();
 
@@ -200,24 +214,29 @@ class NewCommand extends Command
             'APP_URL' => $this->projecturl,
         );
 
+        // @todo There has to be a better way; opening/closing a file 4x is wrong
+        foreach ($changes as $name => $newvalue) {
+            $this->replaceEnvVariable($name, $newvalue);
+        }
+    }
+
+    protected function replaceEnvVariable($name, $newvalue)
+    {
         // @todo will .env always exist here? Check if not and copy over .env.example?
         // @todo research a more official way to replace .env values... I could not find one
         $contents = file_get_contents($this->projectpath . DIRECTORY_SEPARATOR . '.env');
 
         $newcontents = $contents;
-        foreach ($changes as $name => $value) {
-            preg_match("@$name=(.*)@", $contents, $matches);
-            if (isset($matches[1])) {
-                // @todo sanitize new value and research .env guidelines
-                $newcontents = str_replace("$name=$matches[1]", "$name=$value", $newcontents);
-            }
+        preg_match("@$name=(.*)@", $contents, $matches);
+        if (isset($matches[1])) {
+            // @todo sanitize new value and research .env guidelines
+            $newcontents = str_replace("$name=$matches[1]", "$name=$newvalue", $newcontents);
         }
 
         file_put_contents($this->projectpath . DIRECTORY_SEPARATOR . '.env', $newcontents);
 
         return ($newcontents !== $contents) ? true : false;
     }
-
     /**
      * Execute node or yarn
      */
@@ -382,6 +401,47 @@ class NewCommand extends Command
         }
 
         return true;
+    }
+
+    protected function createDatabase($type = 'sqlite')
+    {
+        if ($type === 'sqlite') {
+            $basedir = $this->projectpath . DIRECTORY_SEPARATOR . 'database';
+
+            // @todo Could not find nice way to add (touch) an empty file here with Filesystem so am doing it manually
+            $process = new Process("touch database.sqlite");
+            $process->setWorkingDirectory($basedir);
+            $process->run();
+
+            $this->info($process->getOutput());
+
+            $this->replaceEnvVariable('DB_CONNECTION', 'sqlite');
+            // @todo Seems this must be a full path, true? Also, should we use a config/ file instead of .env?
+            $this->replaceEnvVariable('DB_DATABASE', $this->projectpath . '/database/database.sqlite');
+
+            return true;
+        }
+
+        if ($type === 'mysql') {
+            // @todo Offer ways to create users here, one user per db? Auto-generate passwords or always use the same?
+
+            // @todo sanitize this name
+            $sql = "CREATE database {$this->projectname}";
+
+            // @todo determine how to do this, either try root/'' or use custom config
+            //
+            $this->warn("The MySQL type is not yet implemented, sorry about that.");
+        }
+
+        return false;
+    }
+
+    protected function migrateFresh()
+    {
+        $process = new Process("php artisan migrate:fresh");
+        $process->setWorkingDirectory($this->projectpath);
+        $process->run();
+        $this->info($process->getOutput());
     }
 
     /**
