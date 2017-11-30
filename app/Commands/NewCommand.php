@@ -2,11 +2,11 @@
 
 namespace App\Commands;
 
+use Illuminate\Filesystem;
 use LaravelZero\Framework\Commands\Command;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception\ProcessFailedException;
-use Illuminate\Filesystem;
 
 class NewCommand extends Command
 {
@@ -72,20 +72,20 @@ class NewCommand extends Command
     public function handle(): void
     {
         $this->projectname = $this->argument('name');
-        $this->projecturl = 'http://'.$this->projectname.'.dev';
+        $this->projecturl = 'http://' . $this->projectname . '.dev';
 
         $this->getAvailableTools();
-        if (! $this->tools['laravel']) {
+        if (!$this->tools['laravel']) {
             $this->error("Unable to find laravel installer so I must exit. One day I might use composer here instead of exiting.");
             exit;
         }
 
         $this->setBasePath();
 
-        $this->projectpath = $this->basepath.DIRECTORY_SEPARATOR.$this->projectname;
+        $this->projectpath = $this->basepath . DIRECTORY_SEPARATOR . $this->projectname;
 
         if (is_dir($this->projectpath)) {
-            if (! $this->askToAndRemoveProject()) {
+            if (!$this->askToAndRemoveProject()) {
                 $this->error("Goodbye!");
                 exit;
             }
@@ -107,7 +107,7 @@ class NewCommand extends Command
         $process->setWorkingDirectory($this->basepath);
         $process->run();
 
-        if (! $process->isSuccessful()) {
+        if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
 
@@ -129,6 +129,35 @@ class NewCommand extends Command
         $this->openEditor();
 
         $this->openBrowser();
+    }
+
+    protected function getAvailableTools()
+    {
+
+        $finder = new ExecutableFinder();
+
+        $checks = array('yarn', 'npm', 'git', 'valet', 'laravel', 'composer');
+        foreach ($checks as $check) {
+            $this->tools[$check] = $finder->find($check);
+        }
+    }
+
+    /**
+     * Set base filepath; defaults to CWD, or uses --path if set
+     */
+    protected function setBasePath()
+    {
+        $this->basepath = $this->cwd;
+        if ($this->option('path')) {
+            $path = $this->option('path');
+            if (is_dir($path)) {
+                $this->basepath = $path;
+            } else {
+                $this->warn("Your defined '--path $path' is not a directory, so I am skipping it and using '{$this->basepath}' instead.");
+
+            }
+        }
+        return $this->basepath;
     }
 
     /**
@@ -161,6 +190,71 @@ class NewCommand extends Command
         }
     }
 
+    protected function replaceEnvVariables()
+    {
+        // @todo make this a configuration option
+        $changes = array(
+            'DB_DATABASE' => $this->projectname,
+            'DB_USERNAME' => 'root',
+            'DB_PASSWORD' => '',
+            'APP_URL' => $this->projecturl,
+        );
+
+        // @todo will .env always exist here? Check if not and copy over .env.example?
+        // @todo research a more official way to replace .env values... I could not find one
+        $contents = file_get_contents($this->projectpath . DIRECTORY_SEPARATOR . '.env');
+
+        $newcontents = $contents;
+        foreach ($changes as $name => $value) {
+            preg_match("@$name=(.*)@", $contents, $matches);
+            if (isset($matches[1])) {
+                // @todo sanitize new value and research .env guidelines
+                $newcontents = str_replace("$name=$matches[1]", "$name=$value", $newcontents);
+            }
+        }
+
+        file_put_contents($this->projectpath . DIRECTORY_SEPARATOR . '.env', $newcontents);
+
+        return ($newcontents !== $contents) ? true : false;
+    }
+
+    /**
+     * Execute node or yarn
+     */
+    protected function doNodeOrYarn()
+    {
+        $finder = new ExecutableFinder();
+
+        if ($this->option('node')) {
+
+            $command = '';
+            if ($this->tools['yarn']) {
+                $command = 'yarn';
+            } elseif ($this->tools['npm']) {
+                $command = 'npm install';
+            }
+
+            if (empty($command)) {
+                $this->error("Either yarn or npm are required");
+                return false;
+            }
+
+            $this->info("Executing $command now; in {$this->projectpath}");
+
+            $process = new Process($command);
+            $process->setWorkingDirectory($this->projectpath);
+            #$process->run();
+
+            $process->start();
+            $iterator = $process->getIterator($process::ITER_SKIP_ERR | $process::ITER_KEEP_OUTPUT);
+            foreach ($iterator as $data) {
+                echo $data . "\n";
+            }
+
+            #$this->info($process->getOutput());
+        }
+    }
+
     /**
      * Execute make:auth if user passed in --auth
      *
@@ -178,12 +272,71 @@ class NewCommand extends Command
 
             $process->run();
 
-            if (! $process->isSuccessful()) {
+            if (!$process->isSuccessful()) {
                 throw new ProcessFailedException($process);
             }
 
             $this->info($process->getOutput());
         }
+    }
+
+    /**
+     * Execute valet link $projectname if user passed in --link
+     *
+     * @throws \Symfony\Component\Process\Exception\ProcessFailedException
+     */
+    protected function doValetLink()
+    {
+        if ($this->option('link')) {
+
+            if (!$this->tools['valet']) {
+                $this->warn("Cannot find valet on your system so a valet link was not created.");
+                return false;
+            }
+
+            $command = "valet link {$this->projectname}";
+            $this->info("Linking valet by executing '$command' in {$this->basepath}");
+
+            $process = new Process($command);
+            $process->setWorkingDirectory($this->projectpath);
+
+            $process->run();
+
+            if (!$process->isSuccessful()) {
+                throw new ProcessFailedException($process);
+            }
+
+            $this->info($process->getOutput());
+        }
+    }
+
+    protected function doGit()
+    {
+        if ($this->option('message')) {
+            $this->commitmessage = $this->option('message');
+        }
+
+        if (!$this->tools['git']) {
+            $this->info("Unable to find 'git' on the system so I cannot initialize a git repo in '{$this->projectpath}'");
+            return false;
+        }
+
+        $process = new Process("dummy command");
+        $process->setWorkingDirectory($this->projectpath);
+
+        $commands = array(
+            'git init',
+            'git add .',
+            'git commit -m "' . str_replace('"', '\"', $this->commitmessage) . '"',
+        );
+
+        foreach ($commands as $command) {
+            $process->setCommandLine($command);
+            $process->run();
+            $this->info($process->getOutput());
+        }
+
+        return true;
     }
 
     /**
@@ -224,29 +377,11 @@ class NewCommand extends Command
         $process->setTty(true);
         $process->run();
 
-        if (! $process->isSuccessful()) {
+        if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
 
         return true;
-    }
-
-    /**
-     * Set base filepath; defaults to CWD, or uses --path if set
-     */
-    protected function setBasePath()
-    {
-        $this->basepath = $this->cwd;
-        if ($this->option('path')) {
-            $path = $this->option('path');
-            if (is_dir($path)) {
-                $this->basepath = $path;
-            } else {
-                $this->warn("Your defined '--path $path' is not a directory, so I am skipping it and using '{$this->basepath}' instead.");
-
-            }
-        }
-        return $this->basepath;
     }
 
     /**
@@ -264,9 +399,9 @@ class NewCommand extends Command
         // macOS (darwin)
         if (false !== stripos(PHP_OS, 'darwin')) {
             if ($browser === '') {
-                $command = 'open "'.$this->projecturl.'"';
+                $command = 'open "' . $this->projecturl . '"';
             } else {
-                $command = 'open -a "'. $browser .'" "'. $this->projecturl . '"';
+                $command = 'open -a "' . $browser . '" "' . $this->projecturl . '"';
             }
         }
 
@@ -288,139 +423,6 @@ class NewCommand extends Command
             $process = new Process($command);
             $process->setWorkingDirectory($this->cwd);
             $process->run();
-        }
-    }
-
-    /**
-     * Execute node or yarn
-     */
-    protected function doNodeOrYarn()
-    {
-        $finder = new ExecutableFinder();
-
-        if ($this->option('node')) {
-
-            $command = '';
-            if ($this->tools['yarn']) {
-                $command = 'yarn';
-            } elseif ($this->tools['npm']) {
-                $command = 'npm install';
-            }
-
-            if (empty($command)) {
-                $this->error("Either yarn or npm are required");
-                return false;
-            }
-
-            $this->info("Executing $command now; in {$this->projectpath}");
-
-            $process = new Process($command);
-            $process->setWorkingDirectory($this->projectpath);
-            #$process->run();
-
-            $process->start();
-            $iterator = $process->getIterator($process::ITER_SKIP_ERR | $process::ITER_KEEP_OUTPUT);
-            foreach ($iterator as $data) {
-                echo $data."\n";
-            }
-
-            #$this->info($process->getOutput());
-        }
-    }
-
-    protected function doGit() {
-        if ($this->option('message')) {
-            $this->commitmessage = $this->option('message');
-        }
-
-        if (! $this->tools['git']) {
-            $this->info("Unable to find 'git' on the system so I cannot initialize a git repo in '{$this->projectpath}'");
-            return false;
-        }
-
-        $process = new Process("dummy command");
-        $process->setWorkingDirectory($this->projectpath);
-
-        $commands = array(
-            'git init',
-            'git add .',
-            'git commit -m "'. str_replace('"', '\"', $this->commitmessage) . '"',
-        );
-
-        foreach ($commands as $command) {
-            $process->setCommandLine($command);
-            $process->run();
-            $this->info($process->getOutput());
-        }
-
-        return true;
-    }
-
-    /**
-     * Execute valet link $projectname if user passed in --link
-     *
-     * @throws \Symfony\Component\Process\Exception\ProcessFailedException
-     */
-    protected function doValetLink()
-    {
-        if ($this->option('link')) {
-
-            if (! $this->tools['valet']) {
-                $this->warn("Cannot find valet on your system so a valet link was not created.");
-                return false;
-            }
-
-            $command = "valet link {$this->projectname}";
-            $this->info("Linking valet by executing '$command' in {$this->basepath}");
-
-            $process = new Process($command);
-            $process->setWorkingDirectory($this->projectpath);
-
-            $process->run();
-
-            if (! $process->isSuccessful()) {
-                throw new ProcessFailedException($process);
-            }
-
-            $this->info($process->getOutput());
-        }
-    }
-
-    protected function replaceEnvVariables()
-    {
-        // @todo make this a configuration option
-        $changes = array(
-            'DB_DATABASE' => $this->projectname,
-            'DB_USERNAME' => 'root',
-            'DB_PASSWORD' => '',
-            'APP_URL' => $this->projecturl,
-        );
-
-        // @todo will .env always exist here? Check if not and copy over .env.example?
-        // @todo research a more official way to replace .env values... I could not find one
-        $contents = file_get_contents($this->projectpath.DIRECTORY_SEPARATOR.'.env');
-
-        $newcontents = $contents;
-        foreach ($changes as $name => $value) {
-            preg_match("@$name=(.*)@", $contents, $matches);
-            if (isset($matches[1])) {
-                // @todo sanitize new value and research .env guidelines
-                $newcontents = str_replace("$name=$matches[1]", "$name=$value", $newcontents);
-            }
-        }
-
-        file_put_contents($this->projectpath.DIRECTORY_SEPARATOR.'.env', $newcontents);
-
-        return ($newcontents !== $contents) ? true : false;
-    }
-
-    protected function getAvailableTools() {
-
-        $finder = new ExecutableFinder();
-
-        $checks = array('yarn', 'npm', 'git', 'valet', 'laravel', 'composer');
-        foreach ($checks as $check) {
-            $this->tools[$check] = $finder->find($check);
         }
     }
 }
