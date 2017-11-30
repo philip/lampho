@@ -5,4 +5,4 @@ npm-debug.log
 public/storage
 storage/*.key
 .env
-
+.DS_Store
