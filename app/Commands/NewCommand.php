@@ -114,6 +114,10 @@ class NewCommand extends Command
         // @todo Determine why the above outputs before this point; so the following getOutput() call does nothing
         $this->info($process->getOutput());
 
+        if ($this->replaceEnvVariables()) {
+            $this->info("I replaced .env variables in your new Laravel application");
+        }
+
         $this->doNodeOrYarn();
 
         $this->doAuth();
@@ -380,6 +384,34 @@ class NewCommand extends Command
 
             $this->info($process->getOutput());
         }
+    }
+
+    protected function replaceEnvVariables()
+    {
+        // @todo make this a configuration option
+        $changes = array(
+            'DB_DATABASE' => $this->projectname,
+            'DB_USERNAME' => 'root',
+            'DB_PASSWORD' => '',
+            'APP_URL' => $this->projecturl,
+        );
+
+        // @todo will .env always exist here? Check if not and copy over .env.example?
+        // @todo research a more official way to replace .env values... I could not find one
+        $contents = file_get_contents($this->projectpath.DIRECTORY_SEPARATOR.'.env');
+
+        $newcontents = $contents;
+        foreach ($changes as $name => $value) {
+            preg_match("@$name=(.*)@", $contents, $matches);
+            if (isset($matches[1])) {
+                // @todo sanitize new value and research .env guidelines
+                $newcontents = str_replace("$name=$matches[1]", "$name=$value", $newcontents);
+            }
+        }
+
+        file_put_contents($this->projectpath.DIRECTORY_SEPARATOR.'.env', $newcontents);
+
+        return ($newcontents !== $contents) ? true : false;
     }
 
     protected function getAvailableTools() {
