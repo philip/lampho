@@ -49,6 +49,8 @@ class NewCommand extends Command
 
     protected $dbtypes = ['sqlite', 'mysql'];
 
+    protected $os = null;
+
     /**
      * The console command description.
      *
@@ -65,6 +67,8 @@ class NewCommand extends Command
 
         $this->cwd = getcwd();
         $this->basepath = $this->cwd;
+
+        $this->os = new \Tivie\OS\Detector();
     }
 
     /**
@@ -464,8 +468,7 @@ class NewCommand extends Command
             $browser = $this->option('browser');
         }
 
-        // macOS (darwin)
-        if (false !== stripos(PHP_OS, 'darwin')) {
+        if ($this->os->isOSX()) {
             if ($browser === '') {
                 $command = 'open "' . $this->projecturl . '"';
             } else {
@@ -473,13 +476,11 @@ class NewCommand extends Command
             }
         }
 
-        // Windows @todo do we support Windows?
-        if (windows_os()) {
+        if ($this->os->isWindowsLike()) {
             $command = '';
         }
 
-        // Probably Linux @todo test me
-        if (empty($command)) {
+        if ($this->os->isUnixLike()) {
             $finder = new ExecutableFinder();
             if ($finder->find('xdg-open')) {
                 $command = 'xdg-open "' . $this->projecturl . '"';
