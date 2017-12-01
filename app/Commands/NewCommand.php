@@ -154,7 +154,9 @@ class NewCommand extends Command
 
         $this->openEditor();
 
-        $this->openBrowser();
+        if ($this->tools['valet']) {
+            $this->openBrowser();
+        }
     }
 
     protected function getAvailableTools()
