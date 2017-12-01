@@ -39,13 +39,13 @@ class NewCommand extends Command
 
     protected $commitmessage = 'Initial commit.';
 
-    protected $editors_terminal = array('vim', 'vi', 'nano', 'pico', 'ed', 'emacs', 'nvim');
+    protected $editors_terminal = ['vim', 'vi', 'nano', 'pico', 'ed', 'emacs', 'nvim'];
 
-    protected $editors_gui = array('pstorm', 'subl', 'atom', 'textmate', 'geany');
+    protected $editors_gui = ['pstorm', 'subl', 'atom', 'textmate', 'geany'];
 
     protected $editor = '';
 
-    protected $tools = array();
+    protected $tools = [];
 
     protected $dbtypes = ['sqlite', 'mysql'];
 
@@ -82,7 +82,7 @@ class NewCommand extends Command
         $this->projecturl = 'http://' . $this->projectname . '.dev';
 
         $this->getAvailableTools();
-        if (!$this->tools['laravel']) {
+        if (! $this->tools['laravel']) {
             $this->error("Unable to find laravel installer so I must exit. One day I might use composer here instead of exiting.");
             exit;
         }
@@ -92,7 +92,7 @@ class NewCommand extends Command
         $this->projectpath = $this->basepath . DIRECTORY_SEPARATOR . $this->projectname;
 
         if (is_dir($this->projectpath)) {
-            if (!$this->askToAndRemoveProject()) {
+            if (! $this->askToAndRemoveProject()) {
                 $this->error("Goodbye!");
                 exit;
             }
@@ -114,7 +114,7 @@ class NewCommand extends Command
         $process->setWorkingDirectory($this->basepath);
         $process->run();
 
-        if (!$process->isSuccessful()) {
+        if (! $process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
 
@@ -128,14 +128,14 @@ class NewCommand extends Command
         $this->doAuth();
 
         if ($this->option('createdb')) {
-            if (!in_array($this->option('createdb'), $this->dbtypes)) {
+            if (! in_array($this->option('createdb'), $this->dbtypes)) {
                 $this->info("You passed in '--createdb " . $this->option('createdb') . "' but I do not understand");
                 $type = $this->anticipate("What type of database would you like to install? Options are ". implode(' or ', $this->dbtypes) . '.', $this->dbtypes, $this->dbtypes[0]);
             } else {
                 $type = $this->option('createdb');
             }
 
-            if (!in_array($type, $this->dbtypes)) {
+            if (! in_array($type, $this->dbtypes)) {
                 $this->alert("Now you're being silly. Entering $type, really? Okay, I won't create a database for you.");
             } else {
                 $this->info("I am creating a new $type database");
@@ -161,10 +161,9 @@ class NewCommand extends Command
 
     protected function getAvailableTools()
     {
-
         $finder = new ExecutableFinder();
 
-        $checks = array('yarn', 'npm', 'git', 'valet', 'laravel', 'composer');
+        $checks = ['yarn', 'npm', 'git', 'valet', 'laravel', 'composer'];
         foreach ($checks as $check) {
             $this->tools[$check] = $finder->find($check);
         }
@@ -182,7 +181,6 @@ class NewCommand extends Command
                 $this->basepath = $path;
             } else {
                 $this->warn("Your defined '--path $path' is not a directory, so I am skipping it and using '{$this->basepath}' instead.");
-
             }
         }
         return $this->basepath;
@@ -201,7 +199,6 @@ class NewCommand extends Command
         $this->info("The directory '{$this->projectpath}' already exists.");
 
         if ($this->confirm("Shall I proceed by removing the following directory? {$this->projectpath}")) {
-
             $fs = new Filesystem\Filesystem();
 
             if ($fs->deleteDirectory($this->projectpath)) {
@@ -211,7 +208,6 @@ class NewCommand extends Command
                 $this->error("I was unable to remove the '{$this->projectpath}' directory so I must exit.");
                 return false;
             }
-
         } else {
             $this->error("You have chosen to not remove the '{$this->projectpath}' directory so I must exit.");
             return false;
@@ -221,12 +217,12 @@ class NewCommand extends Command
     protected function replaceEnvVariables()
     {
         // @todo make this a configuration option
-        $changes = array(
+        $changes = [
             'DB_DATABASE' => $this->projectname,
             'DB_USERNAME' => 'root',
             'DB_PASSWORD' => '',
             'APP_URL' => $this->projecturl,
-        );
+        ];
 
         // @todo There has to be a better way; opening/closing a file 4x is wrong
         foreach ($changes as $name => $newvalue) {
@@ -259,7 +255,6 @@ class NewCommand extends Command
         $finder = new ExecutableFinder();
 
         if ($this->option('node')) {
-
             $command = '';
             if ($this->tools['yarn']) {
                 $command = 'yarn';
@@ -305,7 +300,7 @@ class NewCommand extends Command
 
             $process->run();
 
-            if (!$process->isSuccessful()) {
+            if (! $process->isSuccessful()) {
                 throw new ProcessFailedException($process);
             }
 
@@ -321,8 +316,7 @@ class NewCommand extends Command
     protected function doValetLink()
     {
         if ($this->option('link')) {
-
-            if (!$this->tools['valet']) {
+            if (! $this->tools['valet']) {
                 $this->warn("Cannot find valet on your system so a valet link was not created.");
                 return false;
             }
@@ -335,7 +329,7 @@ class NewCommand extends Command
 
             $process->run();
 
-            if (!$process->isSuccessful()) {
+            if (! $process->isSuccessful()) {
                 throw new ProcessFailedException($process);
             }
 
@@ -349,7 +343,7 @@ class NewCommand extends Command
             $this->commitmessage = $this->option('message');
         }
 
-        if (!$this->tools['git']) {
+        if (! $this->tools['git']) {
             $this->info("Unable to find 'git' on the system so I cannot initialize a git repo in '{$this->projectpath}'");
             return false;
         }
@@ -357,11 +351,11 @@ class NewCommand extends Command
         $process = new Process("dummy command");
         $process->setWorkingDirectory($this->projectpath);
 
-        $commands = array(
+        $commands = [
             'git init',
             'git add .',
             'git commit -m "' . str_replace('"', '\"', $this->commitmessage) . '"',
-        );
+        ];
 
         foreach ($commands as $command) {
             $process->setCommandLine($command);
@@ -410,7 +404,7 @@ class NewCommand extends Command
         $process->setTty(true);
         $process->run();
 
-        if (!$process->isSuccessful()) {
+        if (! $process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
 
