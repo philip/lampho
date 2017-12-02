@@ -119,7 +119,7 @@ class NewCommand extends Command
         }
 
         // @todo Determine why the above outputs before this point; so the following getOutput() call does nothing
-        $this->info($process->getOutput());
+        $this->line($process->getOutput());
 
         if ($this->replaceEnvVariables()) {
             $this->info("I replaced .env variables in your new Laravel application");
@@ -271,15 +271,12 @@ class NewCommand extends Command
 
             $process = new Process($command);
             $process->setWorkingDirectory($this->projectpath);
-            #$process->run();
-
             $process->start();
+
             $iterator = $process->getIterator($process::ITER_SKIP_ERR | $process::ITER_KEEP_OUTPUT);
             foreach ($iterator as $data) {
-                echo $data . "\n";
+                $this->line($data);
             }
-
-            #$this->info($process->getOutput());
         }
     }
 
@@ -304,7 +301,7 @@ class NewCommand extends Command
                 throw new ProcessFailedException($process);
             }
 
-            $this->info($process->getOutput());
+            $this->line($process->getOutput());
         }
     }
 
@@ -333,7 +330,7 @@ class NewCommand extends Command
                 throw new ProcessFailedException($process);
             }
 
-            $this->info($process->getOutput());
+            $this->line($process->getOutput());
         }
     }
 
@@ -360,7 +357,7 @@ class NewCommand extends Command
         foreach ($commands as $command) {
             $process->setCommandLine($command);
             $process->run();
-            $this->info($process->getOutput());
+            $this->line($process->getOutput());
         }
 
         return true;
@@ -449,7 +446,7 @@ class NewCommand extends Command
         $process = new Process("php artisan migrate:fresh");
         $process->setWorkingDirectory($this->projectpath);
         $process->run();
-        $this->info($process->getOutput());
+        $this->line($process->getOutput());
     }
 
     /**
@@ -488,6 +485,7 @@ class NewCommand extends Command
             $process = new Process($command);
             $process->setWorkingDirectory($this->cwd);
             $process->run();
+            $this->line($process->getOutput());
         }
     }
 }
