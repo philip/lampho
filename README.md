@@ -18,6 +18,11 @@ The initial version no doubt breaks every known best practice! :)
 - It'll do more tomorrow than it does today
 
 ## Installation
+#### Global
+
+    $ composer global require philip/lampho
+    $ lampho
+
 #### Source
 
     $ git clone git@github.com:philip/lampho.git
@@ -40,9 +45,9 @@ The initial version no doubt breaks every known best practice! :)
 
     $ lampho new foo
 
-##### Same, but with a few options
+##### Same, but with several options
 
-    $ lampho new foo --auth --link --node
+    $ lampho new foo --auth --link --node --createdb=sqlite 
     
 ##### Configuration options
 
