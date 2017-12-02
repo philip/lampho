@@ -17,15 +17,15 @@ class NewCommand extends Command
      */
     protected $signature = 'new
                         {name : Name of the Laravel project}
-                        {--auth : Run make:auth}
-                        {--browser : Browser you want to open the project in}
-                        {--createdb= : Create a database; pass in sqlite or mysql}
-                        {--dev  : Choose the dev branch instead of master}
-                        {--editor= : Text editor to open the project in}
-                        {--link : Create a Valet link to the project directory}
-                        {--message= : Set the first commit message}
-                        {--node : Set to execute yarn or npm install}
-                        {--path= : Base path for the installation, otherwise CWD is used}';
+                        {--a|auth : Run make:auth}
+                        {--b|browser : Browser you want to open the project in}
+                        {--c|createdb= : Create a database; pass in sqlite or mysql}
+                        {--d|dev  : Choose the dev branch instead of master}
+                        {--e|editor= : Text editor to open the project in}
+                        {--l|link : Create a Valet link to the project directory}
+                        {--m|message= : Set the first commit message}
+                        {--y|node : Set to execute yarn or npm install}
+                        {--p|path= : Base path for the installation, otherwise CWD is used}';
 
     protected $projectname = '';
 
