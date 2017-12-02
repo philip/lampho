@@ -157,6 +157,8 @@ class NewCommand extends Command
         if ($this->tools['valet']) {
             $this->openBrowser();
         }
+
+        $this->info("You're ready to go! Remember to cd into '{$this->projectpath}' before you start editing.");
     }
 
     protected function getAvailableTools()
