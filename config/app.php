@@ -12,7 +12,7 @@ return [
     /*
      * Here goes the application version.
      */
-    'version' => '0.0.1',
+    'version' => '0.0.3-alpha',
 
     /*
      * Here goes the application default command. By default
