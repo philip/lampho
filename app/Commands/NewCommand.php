@@ -3,10 +3,10 @@
 namespace App\Commands;
 
 use Illuminate\Filesystem;
-use LaravelZero\Framework\Commands\Command;
-use Symfony\Component\Process\Exception\ProcessFailedException;
-use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
+use LaravelZero\Framework\Commands\Command;
+use Symfony\Component\Process\ExecutableFinder;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class NewCommand extends Command
 {
@@ -79,28 +79,28 @@ class NewCommand extends Command
     public function handle(): void
     {
         $this->projectname = $this->argument('name');
-        $this->projecturl = 'http://' . $this->projectname . '.dev';
+        $this->projecturl = 'http://'.$this->projectname.'.dev';
 
         $this->getAvailableTools();
         if (! $this->tools['laravel']) {
-            $this->error("Unable to find laravel installer so I must exit. One day I might use composer here instead of exiting.");
+            $this->error('Unable to find laravel installer so I must exit. One day I might use composer here instead of exiting.');
             exit;
         }
 
         $this->setBasePath();
 
-        $this->projectpath = $this->basepath . DIRECTORY_SEPARATOR . $this->projectname;
+        $this->projectpath = $this->basepath.DIRECTORY_SEPARATOR.$this->projectname;
 
         if (is_dir($this->projectpath)) {
             if (! $this->askToAndRemoveProject()) {
-                $this->error("Goodbye!");
+                $this->error('Goodbye!');
                 exit;
             }
         }
 
         if ($this->option('dev')) {
-            $this->warn("The laravel installation will use the latest developmental branch by passing in --dev");
-            $branch = " --dev";
+            $this->warn('The laravel installation will use the latest developmental branch by passing in --dev');
+            $branch = ' --dev';
         } else {
             $branch = '';
         }
@@ -122,15 +122,15 @@ class NewCommand extends Command
         $this->line($process->getOutput());
 
         if ($this->replaceEnvVariables()) {
-            $this->info("I replaced .env variables in your new Laravel application");
+            $this->info('I replaced .env variables in your new Laravel application');
         }
 
         $this->doAuth();
 
         if ($this->option('createdb')) {
             if (! in_array($this->option('createdb'), $this->dbtypes)) {
-                $this->info("You passed in '--createdb " . $this->option('createdb') . "' but I do not understand");
-                $type = $this->anticipate("What type of database would you like to install? Options are ". implode(' or ', $this->dbtypes) . '.', $this->dbtypes, $this->dbtypes[0]);
+                $this->info("You passed in '--createdb ".$this->option('createdb')."' but I do not understand");
+                $type = $this->anticipate('What type of database would you like to install? Options are '.implode(' or ', $this->dbtypes).'.', $this->dbtypes, $this->dbtypes[0]);
             } else {
                 $type = $this->option('createdb');
             }
@@ -172,7 +172,7 @@ class NewCommand extends Command
     }
 
     /**
-     * Set base filepath; defaults to CWD, or uses --path if set
+     * Set base filepath; defaults to CWD, or uses --path if set.
      */
     protected function setBasePath()
     {
@@ -185,13 +185,14 @@ class NewCommand extends Command
                 $this->warn("Your defined '--path $path' is not a directory, so I am skipping it and using '{$this->basepath}' instead.");
             }
         }
+
         return $this->basepath;
     }
 
     /**
      * Check if directory already exists
      * If exists: prompt to remove, return true if user says yes, else return false
-     * If not exists: return true
+     * If not exists: return true.
      *
      * @todo Use --force here instead of rm?
      * @return bool true if able to continue, else false if directory exists and won't be deleted
@@ -205,13 +206,16 @@ class NewCommand extends Command
 
             if ($fs->deleteDirectory($this->projectpath)) {
                 $this->info("I removed the following directory: {$this->projectpath}");
+
                 return true;
             } else {
                 $this->error("I was unable to remove the '{$this->projectpath}' directory so I must exit.");
+
                 return false;
             }
         } else {
             $this->error("You have chosen to not remove the '{$this->projectpath}' directory so I must exit.");
+
             return false;
         }
     }
@@ -236,7 +240,7 @@ class NewCommand extends Command
     {
         // @todo will .env always exist here? Check if not and copy over .env.example?
         // @todo research a more official way to replace .env values... I could not find one
-        $contents = file_get_contents($this->projectpath . DIRECTORY_SEPARATOR . '.env');
+        $contents = file_get_contents($this->projectpath.DIRECTORY_SEPARATOR.'.env');
 
         $newcontents = $contents;
         preg_match("@$name=(.*)@", $contents, $matches);
@@ -245,12 +249,13 @@ class NewCommand extends Command
             $newcontents = str_replace("$name=$matches[1]", "$name=$newvalue", $newcontents);
         }
 
-        file_put_contents($this->projectpath . DIRECTORY_SEPARATOR . '.env', $newcontents);
+        file_put_contents($this->projectpath.DIRECTORY_SEPARATOR.'.env', $newcontents);
 
         return ($newcontents !== $contents) ? true : false;
     }
+
     /**
-     * Execute node or yarn
+     * Execute node or yarn.
      */
     protected function doNodeOrYarn()
     {
@@ -265,7 +270,8 @@ class NewCommand extends Command
             }
 
             if (empty($command)) {
-                $this->error("Either yarn or npm are required");
+                $this->error('Either yarn or npm are required');
+
                 return false;
             }
 
@@ -283,14 +289,14 @@ class NewCommand extends Command
     }
 
     /**
-     * Execute make:auth if user passed in --auth
+     * Execute make:auth if user passed in --auth.
      *
      * @return $this
      */
     protected function doAuth()
     {
         if ($this->option('auth')) {
-            $command = "php artisan make:auth";
+            $command = 'php artisan make:auth';
 
             $this->info("Executing $command");
 
@@ -308,7 +314,7 @@ class NewCommand extends Command
     }
 
     /**
-     * Execute valet link $projectname if user passed in --link
+     * Execute valet link $projectname if user passed in --link.
      *
      * @throws \Symfony\Component\Process\Exception\ProcessFailedException
      */
@@ -316,7 +322,8 @@ class NewCommand extends Command
     {
         if ($this->option('link')) {
             if (! $this->tools['valet']) {
-                $this->warn("Cannot find valet on your system so a valet link was not created.");
+                $this->warn('Cannot find valet on your system so a valet link was not created.');
+
                 return false;
             }
 
@@ -344,16 +351,17 @@ class NewCommand extends Command
 
         if (! $this->tools['git']) {
             $this->info("Unable to find 'git' on the system so I cannot initialize a git repo in '{$this->projectpath}'");
+
             return false;
         }
 
-        $process = new Process("dummy command");
+        $process = new Process('dummy command');
         $process->setWorkingDirectory($this->projectpath);
 
         $commands = [
             'git init',
             'git add .',
-            'git commit -m "' . str_replace('"', '\"', $this->commitmessage) . '"',
+            'git commit -m "'.str_replace('"', '\"', $this->commitmessage).'"',
         ];
 
         foreach ($commands as $command) {
@@ -366,7 +374,7 @@ class NewCommand extends Command
     }
 
     /**
-     * Open project in text editor
+     * Open project in text editor.
      */
     protected function openEditor()
     {
@@ -391,7 +399,8 @@ class NewCommand extends Command
         }
 
         if (empty($editor)) {
-            $this->warn("Unable to find a text editor to open, skipping this step.");
+            $this->warn('Unable to find a text editor to open, skipping this step.');
+
             return false;
         }
 
@@ -413,10 +422,10 @@ class NewCommand extends Command
     protected function createDatabase($type = 'sqlite')
     {
         if ($type === 'sqlite') {
-            $basedir = $this->projectpath . DIRECTORY_SEPARATOR . 'database';
+            $basedir = $this->projectpath.DIRECTORY_SEPARATOR.'database';
 
             // @todo Could not find nice way to add (touch) an empty file here with Filesystem so am doing it manually
-            $process = new Process("touch database.sqlite");
+            $process = new Process('touch database.sqlite');
             $process->setWorkingDirectory($basedir);
             $process->run();
 
@@ -424,7 +433,7 @@ class NewCommand extends Command
 
             $this->replaceEnvVariable('DB_CONNECTION', 'sqlite');
             // @todo Seems this must be a full path, true? Also, should we use a config/ file instead of .env?
-            $this->replaceEnvVariable('DB_DATABASE', $this->projectpath . '/database/database.sqlite');
+            $this->replaceEnvVariable('DB_DATABASE', $this->projectpath.'/database/database.sqlite');
 
             return true;
         }
@@ -437,7 +446,7 @@ class NewCommand extends Command
 
             // @todo determine how to do this, either try root/'' or use custom config
             //
-            $this->warn("The MySQL type is not yet implemented, sorry about that.");
+            $this->warn('The MySQL type is not yet implemented, sorry about that.');
         }
 
         return false;
@@ -445,18 +454,18 @@ class NewCommand extends Command
 
     protected function migrateFresh()
     {
-        $process = new Process("php artisan migrate:fresh");
+        $process = new Process('php artisan migrate:fresh');
         $process->setWorkingDirectory($this->projectpath);
         $process->run();
         $this->line($process->getOutput());
     }
 
     /**
-     * Set browser to open valet project in
+     * Set browser to open valet project in.
      */
     protected function openBrowser()
     {
-        $this->info("Attempting to find a browser to open this in.");
+        $this->info('Attempting to find a browser to open this in.');
 
         $browser = '';
         if ($this->option('browser')) {
@@ -465,9 +474,9 @@ class NewCommand extends Command
 
         if ($this->os->isOSX()) {
             if ($browser === '') {
-                $command = 'open "' . $this->projecturl . '"';
+                $command = 'open "'.$this->projecturl.'"';
             } else {
-                $command = 'open -a "' . $browser . '" "' . $this->projecturl . '"';
+                $command = 'open -a "'.$browser.'" "'.$this->projecturl.'"';
             }
         }
 
@@ -478,7 +487,7 @@ class NewCommand extends Command
         if ($this->os->isUnixLike()) {
             $finder = new ExecutableFinder();
             if ($finder->find('xdg-open')) {
-                $command = 'xdg-open "' . $this->projecturl . '"';
+                $command = 'xdg-open "'.$this->projecturl.'"';
             }
         }
 
