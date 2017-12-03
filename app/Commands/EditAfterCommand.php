@@ -37,6 +37,6 @@ class EditAfterCommand extends Command
      */
     public function handle(): void
     {
-        $this->info("I will open a file at location path/to/location for you to edit.");
+        $this->info('I will open a file at location path/to/location for you to edit.');
     }
 }

@@ -37,6 +37,6 @@ class MakeAfterCommand extends Command
      */
     public function handle(): void
     {
-        $this->info("I will open a file at location path/to/location and insert boilerplate markup for you to edit.");
+        $this->info('I will open a file at location path/to/location and insert boilerplate markup for you to edit.');
     }
 }

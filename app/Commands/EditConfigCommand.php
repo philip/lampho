@@ -37,6 +37,6 @@ class EditConfigCommand extends Command
      */
     public function handle(): void
     {
-        $this->info("You have chosen to edit the existing lampho configuration file.");
+        $this->info('You have chosen to edit the existing lampho configuration file.');
     }
 }

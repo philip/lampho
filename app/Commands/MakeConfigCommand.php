@@ -2,8 +2,8 @@
 
 namespace App\Commands;
 
-use LaravelZero\Framework\Commands\Command;
 use Illuminate\Support\Facades\Storage;
+use LaravelZero\Framework\Commands\Command;
 
 class MakeConfigCommand extends Command
 {
@@ -38,10 +38,10 @@ class MakeConfigCommand extends Command
      */
     public function handle(): void
     {
-        $this->info("You have chosen to make a configuration file");
+        $this->info('You have chosen to make a configuration file');
 
         // @todo Determine if we should Storage:: a new text file, or use something like config/foo.php instead?
         // @todo Lambo uses ~/.lambo/config ... use this convention?
-        Storage::put('config', "you=awesome");
+        Storage::put('config', 'you=awesome');
     }
 }
