@@ -318,6 +318,7 @@ class NewCommand extends Command
         }
 
         $this->line($process->getOutput());
+
         return true;
     }
 
