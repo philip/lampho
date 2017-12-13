@@ -125,7 +125,9 @@ class NewCommand extends Command
             $this->info('I replaced .env variables in your new Laravel application');
         }
 
-        $this->doAuth();
+        if ($this->option('auth')) {
+            $this->doAuth();
+        }
 
         if ($this->option('createdb')) {
             if (! in_array($this->option('createdb'), $this->dbtypes)) {
@@ -146,17 +148,23 @@ class NewCommand extends Command
             }
         }
 
-        $this->doNodeOrYarn();
+        if ($this->option('node')) {
+            $this->doNodeOrYarn();
+        }
 
-        $this->doValetLink();
+        if ($this->option('link')) {
+            if ($this->tools['valet']) {
+                if ($this->doValetLink()) {
+                    $this->openBrowser();
+                }
+            }
+        }
 
-        $this->doGit();
+        if ($this->tools['git']) {
+            $this->doGit();
+        }
 
         $this->openEditor();
-
-        if ($this->tools['valet']) {
-            $this->openBrowser();
-        }
 
         $this->info("You're ready to go! Remember to cd into '{$this->projectpath}' before you start editing.");
     }
@@ -261,30 +269,28 @@ class NewCommand extends Command
     {
         $finder = new ExecutableFinder();
 
-        if ($this->option('node')) {
-            $command = '';
-            if ($this->tools['yarn']) {
-                $command = 'yarn';
-            } elseif ($this->tools['npm']) {
-                $command = 'npm install';
-            }
+        $command = '';
+        if ($this->tools['yarn']) {
+            $command = 'yarn';
+        } elseif ($this->tools['npm']) {
+            $command = 'npm install';
+        }
 
-            if (empty($command)) {
-                $this->error('Either yarn or npm are required');
+        if (empty($command)) {
+            $this->error('Either yarn or npm are required');
 
-                return false;
-            }
+            return false;
+        }
 
-            $this->info("Executing $command now; in {$this->projectpath}");
+        $this->info("Executing $command now; in {$this->projectpath}");
 
-            $process = new Process($command);
-            $process->setWorkingDirectory($this->projectpath);
-            $process->start();
+        $process = new Process($command);
+        $process->setWorkingDirectory($this->projectpath);
+        $process->start();
 
-            $iterator = $process->getIterator($process::ITER_SKIP_ERR | $process::ITER_KEEP_OUTPUT);
-            foreach ($iterator as $data) {
-                $this->line($data);
-            }
+        $iterator = $process->getIterator($process::ITER_SKIP_ERR | $process::ITER_KEEP_OUTPUT);
+        foreach ($iterator as $data) {
+            $this->line($data);
         }
     }
 
@@ -295,22 +301,20 @@ class NewCommand extends Command
      */
     protected function doAuth()
     {
-        if ($this->option('auth')) {
-            $command = 'php artisan make:auth';
+        $command = 'php artisan make:auth';
 
-            $this->info("Executing $command");
+        $this->info("Executing $command");
 
-            $process = new Process($command);
-            $process->setWorkingDirectory($this->projectpath);
+        $process = new Process($command);
+        $process->setWorkingDirectory($this->projectpath);
 
-            $process->run();
+        $process->run();
 
-            if (! $process->isSuccessful()) {
-                throw new ProcessFailedException($process);
-            }
-
-            $this->line($process->getOutput());
+        if (! $process->isSuccessful()) {
+            throw new ProcessFailedException($process);
         }
+
+        $this->line($process->getOutput());
     }
 
     /**
@@ -320,27 +324,26 @@ class NewCommand extends Command
      */
     protected function doValetLink()
     {
-        if ($this->option('link')) {
-            if (! $this->tools['valet']) {
-                $this->warn('Cannot find valet on your system so a valet link was not created.');
+        if (! $this->tools['valet']) {
+            $this->warn('Cannot find valet on your system so a valet link was not created.');
 
-                return false;
-            }
-
-            $command = "valet link {$this->projectname}";
-            $this->info("Linking valet by executing '$command' in {$this->basepath}");
-
-            $process = new Process($command);
-            $process->setWorkingDirectory($this->projectpath);
-
-            $process->run();
-
-            if (! $process->isSuccessful()) {
-                throw new ProcessFailedException($process);
-            }
-
-            $this->line($process->getOutput());
+            return false;
         }
+
+        $command = "valet link {$this->projectname}";
+        $this->info("Linking valet by executing '$command' in {$this->basepath}");
+
+        $process = new Process($command);
+        $process->setWorkingDirectory($this->projectpath);
+
+        $process->run();
+
+        if (! $process->isSuccessful()) {
+            throw new ProcessFailedException($process);
+        }
+
+        $this->line($process->getOutput());
+        return true;
     }
 
     protected function doGit()
