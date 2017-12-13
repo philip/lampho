@@ -1,34 +1,40 @@
 ## Lambo port using Laravel Zero
 
-Honestly, this is a test project written to help me learn Laravel. 
-All advice is welcome. Ideally it'll be refactored several times. 
-The initial version no doubt breaks every known best practice! :)
+This started as a test project to help me learn Laravel. All advice is welcome. Ideally it'll be refactored several times. 
+The initial version breaks every known best practice! :)
 
 ## Things that inspired this project
 
-- [Lambo](https://github.com/tightenco/lambo): A useful shell script that generates Laravel projects
-- [Laravel](https://laravel.com/): Something I'm starting to learn
-- [Laravel Zero](http://laravel-zero.com/): Base of this project, and I like CLI
-- Me: reprogramming my brain from PHP 4 to PHP 7 (I'm an old-timer that still uses `array()`)
+- [Lambo](https://github.com/tightenco/lambo): A useful shell script that generates new Laravel projects
+- [Laravel](https://laravel.com/): The PHP framework
+- [Laravel Zero](http://laravel-zero.com/): Base for this project; Laravel for CLI
+- Me: reprogramming my brain from PHP 4 to PHP 7 (I'm an old-timer that still uses `array()` and `OOP` is hard)
 
 ## Status
 
-- It works and contains most lambo commands. However, *all* logic is thrown into `app\Commands\NewCommand.php` so that's not ideal
-- The name `lampho` is strange but it's probably temporary and my brain thinks replacing `b` (bash) with `ph` (PHP) makes sense; that and maybe lamb pho exists?
-- It'll do more tomorrow than it does today
+- It works well and includes most lambo commands.
+- However, *all* logic is thrown into `app\Commands\NewCommand.php` so that's not good
+- The name `lampho` is strange but it's probably temporary and my brain thinks replacing `b` (bash) with `ph` (PHP) makes sense; that and `lamb pho` has logo potential
+- Expect progress in the future
+
+## How you can help
+
+- Refactor! Especially [app\Commands\NewCommand.php](app/Commands/NewCommand.php) (please don't laugh)
+- Suggest or implement features
+- Write tests
 
 ## Installation
 #### Global
 
     $ composer global require philip/lampho
-    $ lampho
+    $ lampho help
 
 #### Source
 
     $ git clone git@github.com:philip/lampho.git
     $ cd lampho
     $ composer update
-    $ ./lampho
+    $ ./lampho help
 
 ## Documentation
 
@@ -41,7 +47,7 @@ The initial version no doubt breaks every known best practice! :)
 
 ## Examples
 
-##### Creates a new Laravel project named foo
+##### Creates a new Laravel project named `foo`
 
     $ lampho new foo
 
@@ -51,7 +57,7 @@ The initial version no doubt breaks every known best practice! :)
     
 ##### Configuration options
 
-Soon we'll be able to define configuration options and common settings as typing all of the above can become tedious -- all suggestions welcome.
+Soon we'll be able to define configuration options and common settings as typing all of the above can become tedious -- all suggestions welcome. Related, today only `.env` is modified.
 
 
 ##### Options according to `lampho help new`
