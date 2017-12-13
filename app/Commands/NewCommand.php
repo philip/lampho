@@ -83,7 +83,7 @@ class NewCommand extends Command
 
         $this->getAvailableTools();
         if (! $this->tools['laravel']) {
-            $this->error('Unable to find laravel installer so I must exit. One day I might use composer here instead of exiting.');
+            $this->error('Unable to find laravel installer so I must exit. One day I will use composer here instead of exiting.');
             exit;
         }
 
@@ -164,7 +164,7 @@ class NewCommand extends Command
             $this->doGit();
         }
 
-        $this->openEditor();
+        $this->openTextEditor();
 
         $this->info("You're ready to go! Remember to cd into '{$this->projectpath}' before you start editing.");
     }
@@ -179,9 +179,6 @@ class NewCommand extends Command
         }
     }
 
-    /**
-     * Set base filepath; defaults to CWD, or uses --path if set.
-     */
     protected function setBasePath()
     {
         $this->basepath = $this->cwd;
@@ -197,14 +194,6 @@ class NewCommand extends Command
         return $this->basepath;
     }
 
-    /**
-     * Check if directory already exists
-     * If exists: prompt to remove, return true if user says yes, else return false
-     * If not exists: return true.
-     *
-     * @todo Use --force here instead of rm?
-     * @return bool true if able to continue, else false if directory exists and won't be deleted
-     */
     protected function askToAndRemoveProject()
     {
         $this->info("The directory '{$this->projectpath}' already exists.");
@@ -212,6 +201,7 @@ class NewCommand extends Command
         if ($this->confirm("Shall I proceed by removing the following directory? {$this->projectpath}")) {
             $fs = new Filesystem\Filesystem();
 
+            // @todo Use laravel --force here instead of deleteDirectory()?
             if ($fs->deleteDirectory($this->projectpath)) {
                 $this->info("I removed the following directory: {$this->projectpath}");
 
@@ -262,13 +252,8 @@ class NewCommand extends Command
         return ($newcontents !== $contents) ? true : false;
     }
 
-    /**
-     * Execute node or yarn.
-     */
     protected function doNodeOrYarn()
     {
-        $finder = new ExecutableFinder();
-
         $command = '';
         if ($this->tools['yarn']) {
             $command = 'yarn';
@@ -294,11 +279,6 @@ class NewCommand extends Command
         }
     }
 
-    /**
-     * Execute make:auth if user passed in --auth.
-     *
-     * @return $this
-     */
     protected function doAuth()
     {
         $command = 'php artisan make:auth';
@@ -317,11 +297,6 @@ class NewCommand extends Command
         $this->line($process->getOutput());
     }
 
-    /**
-     * Execute valet link $projectname if user passed in --link.
-     *
-     * @throws \Symfony\Component\Process\Exception\ProcessFailedException
-     */
     protected function doValetLink()
     {
         if (! $this->tools['valet']) {
@@ -376,10 +351,7 @@ class NewCommand extends Command
         return true;
     }
 
-    /**
-     * Open project in text editor.
-     */
-    protected function openEditor()
+    protected function openTextEditor()
     {
         if ($this->option('editor')) {
             $editor = $this->option('editor');
@@ -463,9 +435,6 @@ class NewCommand extends Command
         $this->line($process->getOutput());
     }
 
-    /**
-     * Set browser to open valet project in.
-     */
     protected function openBrowser()
     {
         $this->info('Attempting to find a browser to open this in.');
